@@ -8,31 +8,29 @@ import (
 
 type client struct {
 	KafkaConfig *config.KafkaConfig
-	Producers   map[*config.ProducerConfig]*kafka.Producer
+	Producer    *kafka.Producer
 	Consumers   map[*config.ConsumerConfig]*kafka.Consumer
 }
 
-func NewKafkaClient(kafkaConfig *config.KafkaConfig) {
+func NewKafkaClient(kafkaConfig *config.KafkaConfig) *client {
 	client := &client{
 		KafkaConfig: kafkaConfig,
-		Producers:   make(map[*config.ProducerConfig]*kafka.Producer),
+		Producer:    new(kafka.Producer),
 		Consumers:   make(map[*config.ConsumerConfig]*kafka.Consumer),
 	}
-	client.registerProducers()
+	client.registerProducer()
 	client.registerConsumers()
 	client.subscribeTopics()
 	fmt.Println("Everything is set.")
+	return client
 }
-func (c *client) registerProducers() {
-
-	for _, producerConfig := range c.KafkaConfig.ProducersConfig {
-		producerConfigMap := make(kafka.ConfigMap)
-		for configName, configValue := range producerConfig.Configs {
-			producerConfigMap[configName] = configValue
-		}
-		newProducer, _ := kafka.NewProducer(&producerConfigMap)
-		c.Producers[&producerConfig] = newProducer
+func (c *client) registerProducer() {
+	producerConfigMap := make(kafka.ConfigMap)
+	for producerConfigKey, producerConfigValue := range c.KafkaConfig.ProducerConfig {
+		producerConfigMap[producerConfigKey] = producerConfigValue
 	}
+	newProducer, _ := kafka.NewProducer(&producerConfigMap)
+	c.Producer = newProducer
 }
 func (c *client) registerConsumers() {
 	for _, consumerConfig := range c.KafkaConfig.ConsumersConfig {
@@ -41,7 +39,8 @@ func (c *client) registerConsumers() {
 			consumerConfigMap[configName] = configValue
 		}
 		newConsumer, _ := kafka.NewConsumer(&consumerConfigMap)
-		c.Consumers[&consumerConfig] = newConsumer
+		consumerConfigCopy := consumerConfig
+		c.Consumers[&consumerConfigCopy] = newConsumer
 	}
 }
 func (c *client) subscribeTopics() {

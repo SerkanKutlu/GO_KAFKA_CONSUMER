@@ -1,5 +1,7 @@
 package config
 
+import "github.com/confluentinc/confluent-kafka-go/kafka"
+
 type AppConfig struct {
 	MongoConfig MongoConfig `yaml:"mongoConfig"`
 	KafkaConfig KafkaConfig `yaml:"kafkaConfig"`
@@ -12,21 +14,17 @@ type MongoConfig struct {
 }
 
 type KafkaConfig struct {
-	ProducersConfig map[string]ProducerConfig `yaml:"producersConfig"`
+	ProducerConfig  map[string]string         `yaml:"producerConfig"`
 	ConsumersConfig map[string]ConsumerConfig `yaml:"consumersConfig"`
 	TopicsConfig    map[string]TopicConfig    `yaml:"topicsConfig"`
 }
 
 type ConsumerConfig struct {
-	Name    string            `yaml:"name"`
-	Configs map[string]string `yaml:"configs"`
+	Name          string            `yaml:"name"`
+	Configs       map[string]string `yaml:"configs"`
+	ConsumeMethod func(message *kafka.Message) error
 }
 
-type ProducerConfig struct {
-	Name    string            `yaml:"name"`
-	Topic   string            `yaml:"topic"`
-	Configs map[string]string `yaml:"configs"`
-}
 type TopicConfig struct {
 	Name      string   `yaml:"name"`
 	Consumers []string `yaml:"consumers"`

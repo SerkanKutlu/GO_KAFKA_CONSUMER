@@ -4,37 +4,13 @@ dev:
     database :  "GoUsersDb"
     collection : {"Log" : "KafkaLogs"}
   kafkaConfig:
-    producersConfig:
-      deadLetterProducer:
-        name: deadletterproducer
-        topic: deadLetter
-        configs:
-          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
-          security.protocol: SASL_SSL
-          sasl.mechanisms: PLAIN
-          sasl.username: OV5JWHPDABXM6ULA
-          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
-          compression.type: gzip
-      order4snProducer:
-        name: order4snproducer
-        topic: order4sn
-        configs:
-          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
-          security.protocol: SASL_SSL
-          sasl.mechanisms: PLAIN
-          sasl.username: OV5JWHPDABXM6ULA
-          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
-          compression.type: gzip
-      order8snProducer:
-        name: order8snproducer
-        topic: order8sn
-        configs:
-          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
-          security.protocol: SASL_SSL
-          sasl.mechanisms: PLAIN
-          sasl.username: OV5JWHPDABXM6ULA
-          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
-          compression.type: gzip
+    producerConfig:
+      bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+      security.protocol: SASL_SSL
+      sasl.mechanisms: PLAIN
+      sasl.username: OV5JWHPDABXM6ULA
+      sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+      compression.type: gzip
     consumersConfig:
       orderCreatedLogConsumer:
         name: ordercreatedlogconsumer
