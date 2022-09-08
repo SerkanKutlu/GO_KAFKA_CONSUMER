@@ -1,0 +1,85 @@
+dev:
+  mongoConfig:
+    connectionString : "mongodb://root:155202Asd...@localhost:27017"
+    database :  "GoUsersDb"
+    collection : {"Log" : "KafkaLogs"}
+  kafkaConfig:
+    producersConfig:
+      deadLetterProducer:
+        name: deadletterproducer
+        topic: deadLetter
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          compression.type: gzip
+      order4snProducer:
+        name: order4snproducer
+        topic: order4sn
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          compression.type: gzip
+      order8snProducer:
+        name: order8snproducer
+        topic: order8sn
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          compression.type: gzip
+    consumersConfig:
+      orderCreatedLogConsumer:
+        name: ordercreatedlogconsumer
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          group.id: orderConsumers
+          auto.offset.reset: smallest
+      orderCreated4snConsumer:
+        name: ordercreated4snconsumer
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          group.id: 4snConsumers
+          auto.offset.reset: smallest
+      orderCreated8snConsumer:
+        name: ordercreated8snconsumer
+        configs:
+          bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
+          security.protocol: SASL_SSL
+          sasl.mechanisms: PLAIN
+          sasl.username: OV5JWHPDABXM6ULA
+          sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
+          group.id: 8snConsumers
+          auto.offset.reset: smallest
+    topicsConfig:
+      orderCreated:
+        name: orderCreated
+        consumers: [ordercreatedlogconsumer]
+        producers: []
+      order4sn:
+        name: order4sn
+        consumers: [ordercreated4snconsumer]
+        producers: [order4snproducer]
+      order8sn:
+        name: order8sn
+        consumers: [ordercreated8snconsumer]
+        producers: [order8snproducer]
+      deadLetter:
+        name: deadLetter
+        consumers: []
+        producers: [deadletterproducer]
