@@ -18,7 +18,7 @@ func SetLogRepository(ms *MongoService) {
 func GetLogRepository() *LogRepository {
 	return logRepository
 }
-func (lr *LogRepository) Insert(log *model.Log) error {
+func (lr *LogRepository) Create(log *model.Log) error {
 	_, err := lr.mongoService.Logs.InsertOne(context.Background(), log)
 	if err != nil {
 		return err

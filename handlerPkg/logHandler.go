@@ -10,7 +10,7 @@ type LogHandler struct {
 }
 
 func (lh *LogHandler) Log(log *model.Log) error {
-	if err := lh.logService.LogRepository.Insert(log); err != nil {
+	if err := lh.logService.LogRepository.Create(log); err != nil {
 		return err
 	}
 	return nil

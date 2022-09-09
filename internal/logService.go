@@ -6,6 +6,7 @@ import (
 
 type LogService struct {
 	LogRepository *mongoPkg.LogRepository
+	//etc etc
 }
 
 var Logger *LogService
