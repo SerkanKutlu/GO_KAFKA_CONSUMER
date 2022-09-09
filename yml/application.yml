@@ -14,6 +14,7 @@ dev:
     consumersConfig:
       orderCreatedLogConsumer:
         name: ordercreatedlogconsumer
+        topic: orderCreated
         configs:
           bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
           security.protocol: SASL_SSL
@@ -24,6 +25,7 @@ dev:
           auto.offset.reset: smallest
       orderCreated4snConsumer:
         name: ordercreated4snconsumer
+        topic: order4sn
         configs:
           bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
           security.protocol: SASL_SSL
@@ -34,6 +36,7 @@ dev:
           auto.offset.reset: smallest
       orderCreated8snConsumer:
         name: ordercreated8snconsumer
+        topic: order8sn
         configs:
           bootstrap.Servers: pkc-6ojv2.us-west4.gcp.confluent.cloud:9092
           security.protocol: SASL_SSL

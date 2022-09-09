@@ -1,25 +1,21 @@
 package internal
 
 import (
-	"prConsumer/model"
 	mongoPkg "prConsumer/repository/mongo"
 )
 
 type LogService struct {
-	MongoService *mongoPkg.MongoService
+	LogRepository *mongoPkg.LogRepository
 }
 
 var Logger *LogService
 
-func SetLogService(mongoService *mongoPkg.MongoService) {
+func SetLogService(logRepository *mongoPkg.LogRepository) {
 	Logger = &LogService{
-		mongoService,
+		logRepository,
 	}
 }
 
-func (logger *LogService) Log(log *model.Log) error {
-	if err := logger.MongoService.Insert(log); err != nil {
-		return err
-	}
-	return nil
+func GetLogService() *LogService {
+	return Logger
 }

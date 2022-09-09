@@ -29,7 +29,7 @@ func readApplicationConfigFile(env string, file string) *AppConfig {
 
 	viper.SetConfigName(file)
 	if err := viper.ReadInConfig(); err != nil {
-		panic("Can not load application config file")
+		panic(err.Error())
 	}
 	var appConfig AppConfig
 	envSub := viper.Sub(env)

@@ -6,32 +6,43 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	uuid "github.com/satori/go.uuid"
 	"prConsumer/events"
-	"prConsumer/internal"
+	"prConsumer/handlerPkg"
 	"prConsumer/model"
 	"time"
 )
 
-func (c *client) StartConsuming() {
-	c.SetConsumerMethods()
-	for {
-		for consumerConfig, consumer := range c.Consumers {
-			consumer := consumer
-			consumerConfig := consumerConfig
-			go func() {
-				event := consumer.Poll(0)
-				switch event := event.(type) {
-				case *kafka.Message:
-					fmt.Println("message came")
-					if err := consumerConfig.ConsumeMethod(event); err != nil {
-						RunRetry(event, c)
-					}
-				}
-			}()
-		}
-	}
-
+type Consumer struct {
+	appHandler *handlerPkg.Handler
 }
 
+var appConsumer *Consumer
+
+func SetAppConsumer(appHandler *handlerPkg.Handler) {
+	appConsumer = new(Consumer)
+	appConsumer.appHandler = appHandler
+}
+
+func (c *client) StartConsuming() {
+	for {
+		Consume(c)
+	}
+}
+
+func Consume(c *client) {
+	for consumerConfig, consumer := range c.Consumers {
+		consumer := consumer
+		consumerConfig := consumerConfig
+		go func() {
+			event := consumer.Poll(0)
+			switch event := event.(type) {
+			case *kafka.Message:
+				if err := consumerConfig.ConsumeMethod(event); err != nil {
+					RunRetry(event, c)
+				}
+			}
+		}()
+	}
+}
 func OrderCreatedConsume(message *kafka.Message) error {
 	var orderCreated events.OrderCreated
 	if err := json.Unmarshal(message.Value, &orderCreated); err != nil {
@@ -41,38 +52,19 @@ func OrderCreatedConsume(message *kafka.Message) error {
 		Id:      uuid.NewV4().String(),
 		Message: fmt.Sprintf("Order is created with id:%s, at:%s", orderCreated.Id, orderCreated.CreatedAt),
 	}
-	if err := internal.Logger.Log(log); err != nil {
+	if err := appConsumer.appHandler.LogHandler.Log(log); err != nil {
 		return err
 	}
 	return nil
 
 }
 func Order4snConsume(message *kafka.Message) error {
-	fmt.Println("4sn calisti")
 	time.Sleep(4 * time.Second)
 	return OrderCreatedConsume(message)
 }
 func Order8snConsume(message *kafka.Message) error {
-	fmt.Println("8sn calisti")
 	time.Sleep(8 * time.Second)
 	return OrderCreatedConsume(message)
-
-}
-func (c *client) SetConsumerMethods() {
-	for consumerConfig := range c.Consumers {
-		if consumerConfig.Name == "ordercreatedlogconsumer" {
-			consumerConfig.ConsumeMethod = OrderCreatedConsume
-			continue
-		}
-		if consumerConfig.Name == "ordercreated4snconsumer" {
-			consumerConfig.ConsumeMethod = Order4snConsume
-			continue
-		}
-		if consumerConfig.Name == "ordercreated8snconsumer" {
-			consumerConfig.ConsumeMethod = Order8snConsume
-			continue
-		}
-	}
 }
 
 func RunRetry(message *kafka.Message, kafkaClient *client) {
@@ -80,12 +72,12 @@ func RunRetry(message *kafka.Message, kafkaClient *client) {
 	switch *retryCount {
 	case 0:
 		SetRetryCountHeader(message, "1")
-		kafkaClient.Produce(message, "order4sn")
+		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.Order4sn.Name)
 	case 1:
 		SetRetryCountHeader(message, "2")
-		kafkaClient.Produce(message, "order8sn")
+		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.Order8sn.Name)
 	case 2:
-		kafkaClient.Produce(message, "deadLetter")
+		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.DeadLetter.Name)
 	}
 
 }
@@ -101,7 +93,6 @@ func GetRetryCountHeader(message *kafka.Message) *int {
 	}
 	return &retryCount
 }
-
 func SetRetryCountHeader(message *kafka.Message, rc string) {
 	retryHeader := kafka.Header{
 		Key:   "retryCount",

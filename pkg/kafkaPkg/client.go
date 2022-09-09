@@ -11,6 +11,7 @@ type client struct {
 	Producer    *kafka.Producer
 	Consumers   map[*config.ConsumerConfig]*kafka.Consumer
 }
+type ConsumeMethod func(message *kafka.Message) error
 
 func NewKafkaClient(kafkaConfig *config.KafkaConfig) *client {
 	client := &client{
@@ -33,24 +34,33 @@ func (c *client) registerProducer() {
 	c.Producer = newProducer
 }
 func (c *client) registerConsumers() {
-	for _, consumerConfig := range c.KafkaConfig.ConsumersConfig {
-		consumerConfigMap := make(kafka.ConfigMap)
-		for configName, configValue := range consumerConfig.Configs {
-			consumerConfigMap[configName] = configValue
-		}
-		newConsumer, _ := kafka.NewConsumer(&consumerConfigMap)
-		consumerConfigCopy := consumerConfig
-		c.Consumers[&consumerConfigCopy] = newConsumer
-	}
+	//OrderCreated4sn Consumer Register
+	consumerConfig := &c.KafkaConfig.ConsumersConfig.OrderCreated4snConsumer
+	kafkaConsumer := createConsumer(consumerConfig, Order4snConsume)
+	c.Consumers[consumerConfig] = kafkaConsumer
+
+	//OrderCreated8sn Consumer Register
+	consumerConfig = &c.KafkaConfig.ConsumersConfig.OrderCreated8snConsumer
+	kafkaConsumer = createConsumer(consumerConfig, Order8snConsume)
+	c.Consumers[consumerConfig] = kafkaConsumer
+
+	//OrderCreatedLog Consumer Register
+	consumerConfig = &c.KafkaConfig.ConsumersConfig.OrderCreatedLogConsumer
+	kafkaConsumer = createConsumer(consumerConfig, OrderCreatedConsume)
+	c.Consumers[consumerConfig] = kafkaConsumer
+
 }
 func (c *client) subscribeTopics() {
-	for _, topicConfig := range c.KafkaConfig.TopicsConfig {
-		for consumerConfig, consumer := range c.Consumers {
-			for _, consumerName := range topicConfig.Consumers {
-				if consumerConfig.Name == consumerName {
-					_ = consumer.Subscribe(topicConfig.Name, nil)
-				}
-			}
-		}
+	for consumerConfig, kafkaConsumer := range c.Consumers {
+		_ = kafkaConsumer.Subscribe(consumerConfig.Topic, nil)
 	}
+}
+func createConsumer(consumerConfig *config.ConsumerConfig, consumeMethod ConsumeMethod) *kafka.Consumer {
+	consumerConfigMap := make(kafka.ConfigMap)
+	for key, value := range consumerConfig.Configs {
+		consumerConfigMap[key] = value
+	}
+	consumerConfig.ConsumeMethod = consumeMethod
+	kafkaConsumer, _ := kafka.NewConsumer(&consumerConfigMap)
+	return kafkaConsumer
 }
