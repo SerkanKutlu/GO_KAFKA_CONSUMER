@@ -23,6 +23,7 @@ dev:
           sasl.password: hJMrMLFpri87uVgxVWfBeR7fCu+pNGIq/qTkEsrRDN2VB++I8VBKv2kkWAhQfz4g
           group.id: orderConsumers
           auto.offset.reset: smallest
+          enable.auto.commit: 1
       orderCreated4snConsumer:
         name: ordercreated4snconsumer
         topic: order4sn
@@ -62,3 +63,6 @@ dev:
         name: deadLetter
         consumers: []
         producers: [deadletterproducer]
+    ConsumerBatchSettings:
+      messageCount: 2
+      batchSize: 1000000

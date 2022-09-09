@@ -14,9 +14,10 @@ type MongoConfig struct {
 }
 
 type KafkaConfig struct {
-	ProducerConfig  map[string]string  `yaml:"producerConfig"`
-	ConsumersConfig ConsumerConfigList `yaml:"consumersConfig"`
-	TopicsConfig    TopicConfigList    `yaml:"topicsConfig"`
+	ProducerConfig        map[string]string     `yaml:"producerConfig"`
+	ConsumersConfig       ConsumerConfigList    `yaml:"consumersConfig"`
+	TopicsConfig          TopicConfigList       `yaml:"topicsConfig"`
+	ConsumerBatchSettings ConsumerBatchSettings `yaml:"consumerBatchSettings"`
 }
 
 type ConsumerConfigList struct {
@@ -36,10 +37,18 @@ type ConsumerConfig struct {
 	Configs       map[string]string `yaml:"configs"`
 	Topic         string            `yaml:"topic"`
 	ConsumeMethod func(message *kafka.Message) error
+	Batch         *[]kafka.Message
+	MessageCount  int
+	BatchSize     int
 }
 
 type TopicConfig struct {
 	Name      string   `yaml:"name"`
 	Consumers []string `yaml:"consumers"`
 	Producers []string `yaml:"producers"`
+}
+
+type ConsumerBatchSettings struct {
+	MessageCount int `yaml:"messageCount"`
+	BatchSize    int `yaml:"batchSize"`
 }

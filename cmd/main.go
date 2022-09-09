@@ -11,7 +11,7 @@ import (
 func main() {
 	env := "dev"
 	//Getting Configurations
-	confManager := config.NewConfigurationManager("../yml", "application", env)
+	confManager := config.NewConfigurationManager("yml", "application", env)
 	kafkaConf := confManager.GetKafkaConfiguration()
 	mongoConf := confManager.GetMongoConfiguration()
 
