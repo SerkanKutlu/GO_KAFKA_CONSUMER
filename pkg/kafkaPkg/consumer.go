@@ -2,86 +2,37 @@ package kafkaPkg
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	uuid "github.com/satori/go.uuid"
-	"prConsumer/config"
 	"prConsumer/events"
-	"prConsumer/handlerPkg"
+	"prConsumer/internal"
 	"prConsumer/model"
 	"time"
 )
 
-type Consumer struct {
-	appHandler *handlerPkg.Handler
-}
-
-var appConsumer *Consumer
-
-func SetAppConsumer(appHandler *handlerPkg.Handler) {
-	appConsumer = new(Consumer)
-	appConsumer.appHandler = appHandler
-}
-
 func (c *client) StartConsuming() {
+	c.SetConsumerMethods()
 	for {
-		Consume(c)
-	}
-}
-
-func Consume(c *client) {
-	for consumerConfig, consumer := range c.Consumers {
-		event := consumer.Poll(0)
-		switch event := event.(type) {
-		case *kafka.Message:
-			fmt.Println("GELEN MESAJ BU CONSUMERDE:")
-			fmt.Println(consumerConfig.Name)
-			addToBatch(event, consumerConfig)
-			if c.isBatchReady(consumerConfig) {
-				fmt.Println("batch is ready consuming")
-				for _, message := range *consumerConfig.Batch {
-					fmt.Println("message id")
-					fmt.Println(&message)
-					if err := consumerConfig.ConsumeMethod(&message); err != nil {
-						go RunRetry(&message, c)
+		for consumerConfig, consumer := range c.Consumers {
+			consumer := consumer
+			consumerConfig := consumerConfig
+			go func() {
+				event := consumer.Poll(0)
+				switch event := event.(type) {
+				case *kafka.Message:
+					fmt.Println("message came")
+					if err := consumerConfig.ConsumeMethod(event); err != nil {
+						RunRetry(event, c)
 					}
 				}
-				resetBatch(consumerConfig)
-			} else {
-				fmt.Println("Batch is not ready:")
-				fmt.Println(consumerConfig.BatchSize)
-				fmt.Println(consumerConfig.MessageCount)
-			}
-
+			}()
 		}
 	}
-}
-func addToBatch(message *kafka.Message, consumerConfig *config.ConsumerConfig) {
-	if consumerConfig.Batch == nil {
-		consumerConfig.Batch = new([]kafka.Message)
-	}
-	*consumerConfig.Batch = append(*consumerConfig.Batch, *message)
-	consumerConfig.MessageCount++
-	consumerConfig.BatchSize += len(message.Value)
-}
-func (c *client) isBatchReady(consumerConfig *config.ConsumerConfig) bool {
-
-	batchSize := c.KafkaConfig.ConsumerBatchSettings.BatchSize
-	messageCount := c.KafkaConfig.ConsumerBatchSettings.MessageCount
-	return consumerConfig.BatchSize >= batchSize || consumerConfig.MessageCount >= messageCount
 
 }
 
-func resetBatch(consumerConfig *config.ConsumerConfig) {
-	consumerConfig.Batch = nil
-	consumerConfig.Batch = new([]kafka.Message)
-	consumerConfig.BatchSize = 0
-	consumerConfig.MessageCount = 0
-}
 func OrderCreatedConsume(message *kafka.Message) error {
-	fmt.Println("OrderCreatedConsume consumer worked")
-	return errors.New("xxx")
 	var orderCreated events.OrderCreated
 	if err := json.Unmarshal(message.Value, &orderCreated); err != nil {
 		panic("UNMARSHALL ERROR")
@@ -90,21 +41,38 @@ func OrderCreatedConsume(message *kafka.Message) error {
 		Id:      uuid.NewV4().String(),
 		Message: fmt.Sprintf("Order is created with id:%s, at:%s", orderCreated.Id, orderCreated.CreatedAt),
 	}
-	if err := appConsumer.appHandler.LogHandler.Log(log); err != nil {
+	if err := internal.Logger.Log(log); err != nil {
 		return err
 	}
 	return nil
 
 }
 func Order4snConsume(message *kafka.Message) error {
-	fmt.Println("4sn consumer worked")
+	fmt.Println("4sn calisti")
 	time.Sleep(4 * time.Second)
 	return OrderCreatedConsume(message)
 }
 func Order8snConsume(message *kafka.Message) error {
-	fmt.Println("8sn consumer worked")
+	fmt.Println("8sn calisti")
 	time.Sleep(8 * time.Second)
 	return OrderCreatedConsume(message)
+}
+
+func (c *client) SetConsumerMethods() {
+	for consumerConfig := range c.Consumers {
+		if consumerConfig.Name == "ordercreatedlogconsumer" {
+			consumerConfig.ConsumeMethod = OrderCreatedConsume
+			continue
+		}
+		if consumerConfig.Name == "ordercreated4snconsumer" {
+			consumerConfig.ConsumeMethod = Order4snConsume
+			continue
+		}
+		if consumerConfig.Name == "ordercreated8snconsumer" {
+			consumerConfig.ConsumeMethod = Order8snConsume
+			continue
+		}
+	}
 }
 
 func RunRetry(message *kafka.Message, kafkaClient *client) {
@@ -112,12 +80,12 @@ func RunRetry(message *kafka.Message, kafkaClient *client) {
 	switch *retryCount {
 	case 0:
 		SetRetryCountHeader(message, "1")
-		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.Order4sn.Name)
+		kafkaClient.Produce(message, "order4sn")
 	case 1:
 		SetRetryCountHeader(message, "2")
-		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.Order8sn.Name)
+		kafkaClient.Produce(message, "order8sn")
 	case 2:
-		kafkaClient.Produce(message, kafkaClient.KafkaConfig.TopicsConfig.DeadLetter.Name)
+		kafkaClient.Produce(message, "deadLetter")
 	}
 
 }
@@ -133,6 +101,7 @@ func GetRetryCountHeader(message *kafka.Message) *int {
 	}
 	return &retryCount
 }
+
 func SetRetryCountHeader(message *kafka.Message, rc string) {
 	retryHeader := kafka.Header{
 		Key:   "retryCount",
