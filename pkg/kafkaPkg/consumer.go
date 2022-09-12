@@ -55,31 +55,6 @@ func Consume(c *client) {
 			}
 
 		}
-		//consumer := consumer
-		//consumerConfig := consumerConfig
-		//go func() {
-		//	event := consumer.Poll(0)
-		//	switch event := event.(type) {
-		//	case *kafka.Message:
-		//		fmt.Println("GELEN MESAJ BU CONSUMERDE:")
-		//		fmt.Println(consumerConfig.Name)
-		//		addToBatch(event, consumerConfig)
-		//		if c.isBatchReady(consumerConfig) {
-		//			fmt.Println("batch is ready consuming")
-		//			for _, message := range *consumerConfig.Batch {
-		//				if err := consumerConfig.ConsumeMethod(&message); err != nil {
-		//					RunRetry(event, c)
-		//				}
-		//			}
-		//			resetBatch(consumerConfig)
-		//		} else {
-		//			fmt.Println("Batch is not ready:")
-		//			fmt.Println(consumerConfig.BatchSize)
-		//			fmt.Println(consumerConfig.MessageCount)
-		//		}
-		//
-		//	}
-		//}()
 	}
 }
 func addToBatch(message *kafka.Message, consumerConfig *config.ConsumerConfig) {
