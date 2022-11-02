@@ -21,7 +21,6 @@ func (c *client) StartConsuming() {
 				event := consumer.Poll(0)
 				switch event := event.(type) {
 				case *kafka.Message:
-					fmt.Println("message came")
 					if err := consumerConfig.ConsumeMethod(event); err != nil {
 						RunRetry(event, c)
 					}
@@ -41,19 +40,17 @@ func OrderCreatedConsume(message *kafka.Message) error {
 		Id:      uuid.NewV4().String(),
 		Message: fmt.Sprintf("Order is created with id:%s, at:%s", orderCreated.Id, orderCreated.CreatedAt),
 	}
-	if err := internal.Logger.Log(log); err != nil {
+	if err := internal.Logger.LogRepository.Create(log); err != nil {
 		return err
 	}
 	return nil
 
 }
 func Order4snConsume(message *kafka.Message) error {
-	fmt.Println("4sn calisti")
 	time.Sleep(4 * time.Second)
 	return OrderCreatedConsume(message)
 }
 func Order8snConsume(message *kafka.Message) error {
-	fmt.Println("8sn calisti")
 	time.Sleep(8 * time.Second)
 	return OrderCreatedConsume(message)
 }

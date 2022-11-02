@@ -1,7 +1,6 @@
 package kafkaPkg
 
 import (
-	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"prConsumer/config"
 )
@@ -22,7 +21,6 @@ func NewKafkaClient(kafkaConfig *config.KafkaConfig) *client {
 	client.registerProducer()
 	client.registerConsumers()
 	client.subscribeTopics()
-	fmt.Println("Everything is set.")
 	return client
 }
 func (c *client) registerProducer() {
